@@ -1,2 +1,19 @@
  .terraform*
  .terraform/
+
+ /**/.terraform
+
+ /**/.terraform.lock.hcl
+
+customer-network/terraform.tfstate
+customer-network/terraform.tfstate.backup
+
+aws-network/terraform.tfstate
+aws-network/terraform.tfstate.backup
+
+aws-network/.terraform.lock.hcl
+aws-network/.terraform/
+customer-network/.terraform.lock.hcl
+customer-network/.terraform/
+
+!.gitignore
