@@ -18,5 +18,5 @@ variable "PATH_TO_PUBLIC_KEY" {
 }
 
 variable "VPC_CIDR" {
-  default = "10.0.0.0/16"
+  default = "172.31.0.0/16"
 }
