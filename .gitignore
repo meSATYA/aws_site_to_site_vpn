@@ -3,7 +3,7 @@
 
  /**/.terraform
 
- /**/.terraform.lock.hcl
+.terraform.lock.hcl
 
 customer-network/terraform.tfstate
 customer-network/terraform.tfstate.backup
