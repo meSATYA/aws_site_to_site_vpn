@@ -16,7 +16,7 @@ resource "aws_vpc" "aws-vpc" {
 
 resource "aws_subnet" "aws-vpc-private-subnet-1" {
   vpc_id                  = aws_vpc.aws-vpc.id
-  cidr_block              = "172.0.1.0/24"
+  cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = "false"
   availability_zone       = "${var.AWS_REGION}a"
 
@@ -25,7 +25,12 @@ resource "aws_subnet" "aws-vpc-private-subnet-1" {
   }
 }
 
-
+resource "aws_route_table" "custom-aws-route" {
+ vpc_id = aws_vpc.aws-vpc.id
+ tags = {
+ Name = "aws-network-route-table"
+ }
+}
 
 resource "aws_security_group" "allow-ssh-icmp-aws" {
   vpc_id      = aws_vpc.aws-vpc.id
@@ -54,6 +59,40 @@ resource "aws_key_pair" "mykeypairaws" {
   public_key = file("${var.PATH_TO_PUBLIC_KEY}")
 }
 
+resource "aws_vpn_gateway" "vpn-vpg" {
+  vpc_id = aws_vpc.aws-vpc.id
+
+  tags = {
+    Name = "vpn-vpg"
+  }
+}
+
+resource "aws_vpn_gateway_route_propagation" "main" {
+  vpn_gateway_id = aws_vpn_gateway.vpn-vpg.id
+  route_table_id = aws_route_table.custom-aws-route.id
+}
+
+resource "aws_customer_gateway" "customer-gateway" {
+  bgp_asn = 65000
+  ip_address = "18.208.224.140"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "main-customer-gateway"
+  }
+}
+
+
+resource "aws_vpn_connection" "aws-vpn" {
+  vpn_gateway_id      = aws_vpn_gateway.vpn-vpg.id
+  customer_gateway_id = aws_customer_gateway.customer-gateway.id
+  type                = "ipsec.1"
+  static_routes_only  = true
+  tags = {
+    Name = "AWS_VPN"
+  }
+}
+
 resource "aws_instance" "aws_private_instance" {
   ami            = lookup(var.AMIS, var.AWS_REGION)
   instance_type  = "t2.micro"
@@ -72,32 +111,4 @@ resource "aws_instance" "aws_private_instance" {
   }
 }
 
-resource "aws_customer_gateway" "customer-gateway" {
-  bgp_asn = 65000
-  ip_address = "75.101.176.126"
-  type       = "ipsec.1"
 
-  tags = {
-    Name = "main-customer-gateway"
-  }
-}
-
-resource "aws_vpn_gateway" "vpn-vpg" {
-  vpc_id = aws_vpc.aws-vpc.id
-
-  tags = {
-    Name = "vpn-vpg"
-  }
-}
-
-resource "aws_vpn_connection" "aws-vpn" {
-  vpn_gateway_id      = aws_vpn_gateway.vpn-vpg.id
-  customer_gateway_id = aws_customer_gateway.customer-gateway.id
-  type                = "ipsec.1"
-  static_routes_only  = true
-  local_ipv4_network_cidr = "10.0.0.0/16"
-  remote_ipv4_network_cidr = "172.0.0.0/16"
-  tags = {
-    Name = "AWS_VPN"
-  }
-}
